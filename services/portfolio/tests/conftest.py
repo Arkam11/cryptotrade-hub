@@ -7,7 +7,6 @@ The real database dependency is overridden so tests never
 touch the PostgreSQL instance running in Docker.
 """
 
-import pytest
 import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy import event
