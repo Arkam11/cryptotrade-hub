@@ -238,3 +238,4 @@ htmlcov/
 
 # Docker
 *.log
+.env.local
