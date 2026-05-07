@@ -1,0 +1,67 @@
+name: CI — Test & Lint
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: cryptouser
+          POSTGRES_PASSWORD: cryptopass
+          POSTGRES_DB: cryptotrade_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    defaults:
+      run:
+        working-directory: services/portfolio
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Poetry
+        run: |
+          pip install poetry==2.3.4
+          poetry self add poetry-plugin-export
+        working-directory: services/portfolio
+
+      - name: Install dependencies
+        run: poetry install --no-root
+        working-directory: services/portfolio
+
+      - name: Lint with ruff
+        run: poetry run ruff check ../../services/ --config ../../ruff.toml
+        working-directory: services/portfolio
+
+      - name: Run tests
+        run: poetry run pytest tests/ --cov=app --cov-report=xml -v
+        working-directory: services/portfolio
+        env:
+          POSTGRES_HOST: localhost
+          POSTGRES_PORT: 5432
+          POSTGRES_USER: cryptouser
+          POSTGRES_PASSWORD: cryptopass
+          POSTGRES_DB: cryptotrade_test
+
+      - name: Upload coverage
+        uses: codecov/codecov-action@v4
+        with:
+          file: ./services/portfolio/coverage.xml
