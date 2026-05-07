@@ -35,15 +35,25 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install ruff pytest pytest-cov
+          pip install ruff pytest pytest-cov pytest-asyncio httpx aiosqlite \
+            fastapi uvicorn sqlalchemy asyncpg alembic pydantic pydantic-settings \
+            "python-jose[cryptography]" "passlib[bcrypt]" "bcrypt==4.0.1" \
+            python-multipart tenacity redis
 
       - name: Lint with ruff
-        run: ruff check .
+        run: ruff check services/
 
-      - name: Run tests
-        run: pytest tests/ --cov=services --cov-report=xml -v
+      - name: Run portfolio tests
+        working-directory: services/portfolio
+        run: pytest tests/ --cov=app --cov-report=xml -v
+        env:
+          POSTGRES_HOST: localhost
+          POSTGRES_PORT: 5432
+          POSTGRES_USER: cryptouser
+          POSTGRES_PASSWORD: cryptopass
+          POSTGRES_DB: cryptotrade_test
 
       - name: Upload coverage
         uses: codecov/codecov-action@v4
         with:
-          file: ./coverage.xml
+          file: ./services/portfolio/coverage.xml
