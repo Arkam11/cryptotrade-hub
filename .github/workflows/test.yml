@@ -25,27 +25,35 @@ jobs:
           --health-timeout 5s
           --health-retries 5
 
+    defaults:
+      run:
+        working-directory: services/portfolio
+
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Python
+      - name: Set up Python 3.11
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
 
-      - name: Install dependencies
+      - name: Install Poetry
         run: |
-          pip install ruff pytest pytest-cov pytest-asyncio httpx aiosqlite \
-            fastapi uvicorn sqlalchemy asyncpg alembic pydantic pydantic-settings \
-            "python-jose[cryptography]" "passlib[bcrypt]" "bcrypt==4.0.1" \
-            python-multipart tenacity redis
+          pip install poetry==2.3.4
+          poetry self add poetry-plugin-export
+        working-directory: services/portfolio
+
+      - name: Install dependencies
+        run: poetry install --no-root
+        working-directory: services/portfolio
 
       - name: Lint with ruff
-        run: ruff check services/ --config ruff.toml
-
-      - name: Run portfolio tests
+        run: poetry run ruff check ../../services/ --config ../../ruff.toml
         working-directory: services/portfolio
-        run: pytest tests/ --cov=app --cov-report=xml -v
+
+      - name: Run tests
+        run: poetry run pytest tests/ --cov=app --cov-report=xml -v
+        working-directory: services/portfolio
         env:
           POSTGRES_HOST: localhost
           POSTGRES_PORT: 5432
