@@ -41,7 +41,7 @@ jobs:
             python-multipart tenacity redis
 
       - name: Lint with ruff
-        run: ruff check services/
+        run: ruff check services/ --config ruff.toml
 
       - name: Run portfolio tests
         working-directory: services/portfolio
